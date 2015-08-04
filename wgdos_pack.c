@@ -39,6 +39,14 @@
  * SRCE checkin. Type: Undef
  * Reason: Reordering code, fixing bugs and testing compatability with genuine data and adding comments
  *
+ * Revision 2.2  2014/11/27  hshep
+ * SRCE checkin. Type: Update
+ * Reason: Bug fix in the initial bitshifting used to pack a row of data
+ *
+ * Revision 2.2.1  2014/12/08  hshep
+ * SRCE checkin. Type: Update
+ * Reason: Add return code 31, and bug fix for integer overflow when calculating
+ *         spread
  * Information:
  */
 
@@ -48,6 +56,7 @@
 #include <string.h>
 #include <math.h>
 #include <float.h>
+#include <limits.h>
 /* Package header files used */
 #include "wgdosstuff.h"
 #include "logerrors.h"
@@ -142,6 +151,9 @@ int wgdos_pack(
   int zeros_count;             /* Number of bitmapped zeros */
   int ndata;                   /* Number of non-bitmapped data items */
   unsigned int spread;         /* Spread of values in each row */
+  float f_spread;              /* A floating point value of spread */
+  float epsilon_spread;        /* Accuracy for floating point comparison of
+				  spread */
   int bpp;                     /* Number of bits required to store the packed values */
   int bitmap_size;
 
@@ -168,6 +180,7 @@ int wgdos_pack(
     return 1;
   }
 
+  epsilon_spread = 0.00001;
   wgdos_field_header_pointer=(void*)packed_data;
   bitmap_size=(ncols+7)/8;
   size_of_packed_field=0;
@@ -231,11 +244,22 @@ int wgdos_pack(
     /* Calculate the number of bits required to contain the interval at the required accuracy */
     spread=(maxval-minval)/accuracy;
     spread+=((maxval-minval)>=accuracy);
-    for (bpp=0;spread;spread=spread>>1,bpp++) {/*nothing*/}
+    /* It is possible to get an error where the value of spread becomes far
+       too large for the capacity of an unsigned  integer. Therefore
+       we check that spread is smaller than the max value for an unsigned
+       integer ie. 4294967295 */
+    f_spread = (maxval-minval)/accuracy;
+    f_spread += (float) ((maxval-minval)>=accuracy);
+    if (f_spread <= (float)UINT_MAX-epsilon_spread) {
+      for (bpp=0;spread;spread=spread>>1,bpp++) {/*nothing*/}
+    } else {
+      //override to failure
+      bpp = 32;
+    }
     if (bpp>31) {
       snprintf(message, MAX_MESSAGE_SIZE, "Data spread over the row (%f - %f)too large to manage at this accuracy (%f)", minval, maxval, accuracy);
       MO_syslog(VERBOSITY_ERROR, message, &subroutine);
-      return 1;
+      return INVALID_PACKING_ACCURACY;
     }
 
     snprintf(message, MAX_MESSAGE_SIZE, "scale %d min %f max %f accuracy %f bpacc %d ndata %d bpp %d", spread, minval, maxval, accuracy, bpacc,ndata, bpp);
@@ -380,7 +404,7 @@ int bitstuff(unsigned char* byte, int bitnum, unsigned int value, unsigned int n
   }
 
   bitshift=8-(bitnum+nbits)%8;  /* How many bits to shift value so it occupies the right byte positions */
-  shifted=value<<bitshift;
+  shifted=(unsigned long long int)value << bitshift; /* Cast value to long long int before shifting otherwise we run out of bits */
   base_byte=bitnum/8;  /* The byte that the first (highest) byte in shifted needs to go in to */
   bytes_used=(nbits+bitshift+7)/8;  /* How many bytes used (nbits are shifted up by bitshift, so add them) */
 

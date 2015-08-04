@@ -32,7 +32,7 @@
 # Edit these values when building a new version of the library
 major=2
 minor=0
-rel=3
+rel=4
 
 os=`uname`
 if [ _$os = "_OS/390" ]
