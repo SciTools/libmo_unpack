@@ -1,0 +1,453 @@
++++++++++++++++++++++
+Building the Library.
++++++++++++++++++++++
+
+The shell script "make_library" will build the library on platforms we know
+about and have supported before. Running this script will build a shared library
+and static library that can be used to unpack PP-style data. These libraries
+will be created in the current directory, suitable only for personal use.
+
+To distribute these libraries to a location for use system-wide use, use the
+"distribute.sh" shell script and run as administrator for that system, giving
+the location where these libraries and development files should go. I.e.
+
+$ distribute.sh /usr/local
+
+which will put the libraries in /usr/local/lib and include files in
+/usr/local/include.
+
+++++++++++++
+Library use.
+++++++++++++
+
+How to use the library in your own programs.
+
++++++++++++++++++++++
+Unpacking interface:
++++++++++++++++++++++
+
+unpack_ppfield(float mdi, int data_size, char* data, int pack, int unpacked_size, float* to, function* parent)
+Throws
+INFO
+
+mdi: The Missing Data Indicator to fill in missing data points with (or to unpack with in the case of RLE).
+data_size: the number of integer words reserved for the packed data field. You should ensure that the byte array is an integer number of words long, which is the PP format requirement for data fields.
+pack: The packing type. Currently understood:
+   0: Not packed
+   1: WGOS packed
+   4: RLE packed (on MDI values only)
+  NOTE Your program shouldn't care, just throw the data at it and it will get you unpacked data.
+data: the pointer to the bytestream that is the data field to unpack
+unpacked_size: the size this data should expand to after unpacking. Extracted from the PP header. Should be NPT*NROW on a 2D field.
+to: Native floating point array to put the data into. NULL=Test unpacking, don't keep the data.
+parent: the pointer to the function structure that is calling this unpacking routine.
+
+Purpose: To unpack if necessary, and copy to a new array, a given PP style field with the parameters given.
+
+unpack_ppfield64(uint64_t* lookup, char* data, float* to, function* parent)
+Throws
+INFO
+
+lookup: the PP header.
+data: the packed data field
+to: the output data field. NULL=Test unpacking, don't keep the data.
+parent: the program calling this routine
+
+Purpose: To unpack a given PP-type field as produced by the 64-bit UM Fieldsfile structure which uses 64-bit
+values rather than canonical 32-bit values. Returns data as native floats.
+
+unpack_ppfield32(uint32_t* lookup, char* data, float* to, function* parent)
+Throws
+INFO
+
+lookup: the PP header.
+data: the packed data field
+to: the output data field. NULL=Test unpacking, don't keep the data.
+parent: the program calling this routine
+
+Purpose: To unpack a given PP field on a system whose native integer type is not compatible with the canonical
+form: 32 bit values. Returns data as native floats.
+
+byteorder_unpack_ppfield(int* lookup, char* data, int network_order_in, float* to, int network_order_out, function* parent)
+Throws
+INFO
+
+lookup: the PP header.
+data: the packed data field
+network_order_in: Is the data to unpack network order? 0=No 1=Yes
+to: the output data field. NULL=Test unpacking, don't keep the data.
+network_order_out: Do you want the data out in network order? 0=No 1=Yes
+parent: the program calling this routine
+
+Purpose: Call the unpack_ppfield when you have a header and data field in a specific endian format which
+is out of your control. I.e. you're reading a PP file that isn't necessarily in native format, but which
+endian form it is. You can request the data come out in a specific format if the output file is not to be
+native byte ordering.
+
+byteorder_data_unpack_ppfield(float mdi, int data_size, char* data, int network_order_in, int pack, int unpacked_size, float* to, int network_order_out, function* parent)
+Throws
+INFO
+
+mdi: The Missing Data Indicator to fill in missing data points with (or to unpack with in the case of RLE).
+data: the packed data field
+network_order_in: Is the data to unpack network order? 0=No 1=Yes
+to: the output data field. NULL=Test unpacking, don't keep the data.
+data_size: the size of the input data field to handle. For a 2d PP field, extracted from the PP header, can be found by NPTxNROWx4 (bytes)
+pack: The packing type. Extracted from the PP header. Currently understood:
+0: Not packed
+1: WGOS packed
+4: RLE packed (on MDI values only)
+NOTE Your program shouldn't care, just throw the data at it and it will get you unpacked data.
+network_order_in: Do you want the data out in network order? 0=No 1=Yes
+unpacked_size: the size this data should expand to after unpacking. Extracted from the PP header. 
+network_order_out: Do you want the data out in network order? 0=No 1=Yes
+parent: the program calling this routine
+
+Purpose: Call the unpack_ppfield when you have a known form of the data section and have in native form the
+definition of the field's missing data value and the size. You can request it out in a specified form if this
+is not necessarily native.
+
+NOTE: the last two allow a portable call to unpack data when you know what order it is either in before you
+read it by specifying the input byte ordering. Specifying the output byte ordering allows a system to create a
+file that can be read by another system with a required byte order,
+
++++++++++++++++++++++
+Packing interface:
++++++++++++++++++++++
+
+pack_ppfield(float mdi, int ncols, int nrows, float* data, int pack, int bpacc, int nbits, int* packed_size, char* to, function* parent);
+Throws:
+ERROR
+INFO
+MESSAGE
+
+mdi: The Missing Data Indicator used to fill in missing data points with (or to pack in the case of RLE).
+ncols: The number of columns in the data array
+nrows: The number of rows in the data array
+data: The pointer to the native floating point data to pack into a bytestream.
+pack: The packing type. Currently understood:
+0: Not packed
+1: WGOS packed
+4: RLE packed (on MDI values only)
+NOTE Your program shouldn't care, just throw the data at it and it will get you packed data.
+bpacc: The power of two that the data accuracy is set to. Used in WGDOS packing
+nbits: The number of significant bits to be used to pack data. Not used in either packing scheme.
+packed_size: The size of the output data field after packing.
+to: The canonical PP format bytestream, ready to write to a PP file. Should be at least the size of the
+unpacked array
+parent: The pointer to the function structure that is calling this unpacking routine.
+
+Purpose: Call pack_ppfield when you have a data array and know how you wish to pack the data. Returns a non-zero
+number if packing fails, and places unpacked data in canonical PP format in the output array. If the output
+array is a null pointer, just checks to see if the data can be packed.
+
+--- IMPORTANT ---
+
+PLEASE NOTE: The UM at least up until UM 8.4 puts a packing accuracy in a field that
+it does not actually pack, since the packing algorithm does not bother to pack if it
+considers it does not give any benefit to the field size when packed over unpacked.
+The determination is done after it has applied the STASHMASTER request to pack that
+field to the PP header and this header entry is updated in many different places.
+The end result is that the BPACC field entry cannot be entirely relied upon to be
+correct. The pack_pp executable does some guessing about this error. Any program
+using the packing library call itself needs to come to their own decision about
+packing fields handed to it.
+
+--- END NOTE ---
+
+++++++++++++++++++
+Utility interface:
+++++++++++++++++++
+
+Definitions:
+
+Set: How much logging to do 
+Thrown: What level of error has occurred
+VERBOSITY_ERROR
+VERBOSITY_WARNING
+VERBOSITY_INFO
+VERBOSITY_MESSAGE
+VERBOSITY_ALL
+
+VERBOSITY_NOTHING Signals no error of any type has been set
+
+Packing: What packing is enabled/to be enabled:
+UNPACKED 0
+WGDOS_PACKED 1
+RLE_PACKED 4
+
+Thrown: What sort of error has been thrown:
+LOGERRNO_NO_EXCEPTION       : No error remains
+LOGERRNO_FORMAT_EXCEPTION   : The format is incorrect
+LOGERRNO_IO_EXCEPTION       : Could not read, write or similar I/O function
+LOGERRNO_EXCEPTION          : Some other error
+
+MO_syslog (int value, char* message, const function* const caller)
+Throws nothing
+
+value: Passed in by the calling routine. The severity code (1=High, 99=low, 0=Nothing)
+message: Passed in by the calling routine. The message to print out.
+caller: Passed in by the calling routine. The function calling this routine.
+
+Purpose: To deal with errors (possibly by throwing it away, possibly by setting the
+error level encountered) by the library calls. Your program needs define what is an
+error that is severe and what to do about it, hence you have to write one.
+
+set_function_name(char* name, function* caller, function* parent)
+Throws nothing
+
+name: the name of the function you wish to assign to the function pointer "caller"
+caller: the pointer to your function struct you have created to track error calls
+parent: if not null, then the function this calling program wishes to bind to. If 
+parent has a child function pointer assigned already, it is assumed to be out of
+scope and can be overwritten.
+
+Purpose: To assign a function attribution to include in the error message and to enable
+a backtrace on severe error.
+
+set_verbosity(int val)
+val: a VERBOSITY_xxx define.
+
+Purpose: To set the verbosity level of message that will be dealt with, if you are going
+to use "get_verbosity" in your MO_syslog function call to handle logging differently or
+to reduce the number of calls the error message creation calls (if set to VERBOSIT_MESSAGE
+or less)
+
+***
+NB:
+These calls in the utility interface are available but not necessary to use
+***
+
+logerror_exit(void)
+Throws nothing
+
+Purpose: to exit with a shell error code if any unhandled  error remains in the system
+
+int get_verbosity(void)
+Throws nothing
+
+Purpose: to get the current verbosity level. I.e. should you print anything out?
+
+char* verbosity_string(int verbosity);
+verbosity: a VERBOSITY_xxx define.
+
+Purpose: To change a verbosity number into a string to print.
+
+set_logerrno (int val)
+val: A LOGERRNO_xxx value
+
+Purpuse: Set the error handle to the given error type for handling later.
+
+reset_logerror(void)
+Throws nothing
+
+Purpose: reset the log error code before exit (e.g. you have handled the error and there
+is no need to pay heed to the failed state).
+
+int get_logerror
+Throws nothing
+
+Purpose: return the current unhandled error type (LOGERROR_xxx)
+
+set_error_level(int val)
+
+val: A VERBOSITY_xxx value
+
+Purpose: Treat as an error condition any log message of a severity greater or equal to
+val
+
+caller_name_is(char* name, function* caller)
+Throws nothing
+
+name: the identity of the program name you wish to check against.
+caller: the function identifier you wish to check on
+
+Purpose: check what function you're actually in. E.g. if you want to check if you're
+IN your error handling routine already, you can do this here. Case is unimportant.
+
+caller_name_contains(char* name, function* caller)
+Throws nothing
+
+name: the identity or part of that you wish to check the function name against. 
+caller: the function identifier you wish to check on
+
+Purpose: If you have a class of programs with a similar name pre- or postpend then you
+can check for this class with the call. Case is unimportant.
+
+caller_tree_contains(char* name, function* caller)
+Throws nothing
+
+name: the identity of the program name you wish to check against. 
+caller: the function identifier you wish to check on
+
+Purpose: Check this function and any function in the call tree it was executed in. E.g.
+If you want to check against this program being called by a certain program you can do
+that here. Case is unimportant.
+
+bitstuff(unsigned char* byte, int bitnum, unsigned int value, unsigned int nbits, function* parent)
+byte: The byte stream pointer to the start of the stream
+bitnum: What bit number in the stream should the value be stored in
+value: The number to save in the bitstream
+nbits: How many bits per value are there to reserve
+parent: Function pointer to calling routine.
+
+Purpose: stuff nbits set into the byte array at bit offset bitnum off the start.
+Returns: Zero on success, nonzero on error.
+
+wgdos_calc_row_header(int* wgdos_header, float minval, int bpp, int npts, int zeros, int mdis, function* parent)
+wgdos_header: where to put the WGDOS row header.
+minval: minimum value in the row not mapped out
+bpp: How many bits per value are needed to store the values.
+npts: How many points in the row (=ncols)
+zeros: How many zero values were in the row data
+mdis: How many Missing Data Indicator values were in the row data
+parent: Function pointer to calling routine.
+
+count_zeros(int ncols, float* row_data, function* parent)
+ncols: How many values in the row.
+row_data: Array of values in the row.
+parent: Function pointer to calling routine.
+
+Purpose: Count zeros to see if it needs to be mapped out. NOTE: returns 0 if too few to bother mapping out.
+Returns: Number of zeros that ought to be bitmapped out.
+
+fill_bitmap(int ncols, float* row_data, float bitmap_value, int true, unsigned char* bitmap, int* array, function* parent)
+ncols: The number of values in the row.
+row_data: The values in the row.
+bitmap_value: the value in the row to bitmap out.
+true: What counts as bitmapped out? true=1 means 1=bitmapped out, 0=not bitmapped out. true=0 is the opposite.
+bitmap: The bitmap to pack the bitmap into
+array: an array numbers as to whether the value is bitmapped out (1=Yes, 0=No), ignores the value of "true"
+parent: Function pointer to calling routine.
+
+Purpose: Map out the MDI or zeros. NOTE: Zero mapping for WGDOS is inverted, use true=0.
+Returns: Number of values that have been bitmapped out.
+
+*******************************************************************************
+* The following calls are not guaranteed to be the same among point releases. *
+*******************************************************************************
+
+++++++++++++++
+RLE interface:
+++++++++++++++
+
+runlenEncode (float *fatvec, int fatlen, float *thinvec, int *thinlen, float bmdi, function* parent)
+Throws nothing (as yet)
+
+runlenDecode(float *fatvec, int fatlen, char *thinvec, int thinlen, float mdi, function* parent)
+Throws
+INFO
+ERROR
+
+++++++++++++++++
+WGDOS interface:
+++++++++++++++++
+
+wgdos_pack(int ncols,int nrows, float* unpacked_data, float mdi, int bpacc, unsigned char* packed_data, int* packed_length, function* parent)
+ncols: Number of columns in each row
+nrows: Number of rows in field
+unpacked_data: Native floating point values to pack
+mdi: Missing data indicator value
+bpacc: WGDOS packing accuracy
+packed_data: Packed data
+packed_length: Packed data length
+parent: Function pointer to calling routine
+
+Purpose: Pack given floating point array if possible, returning the numbers in canonical PP format ready for saving to a PP file
+Returns: Zero on success, nonzero on failure, on failure, acts as if no packing were asked for.
+Throws
+MESSAGE
+ERROR
+
+wgdos_unpack(char* packed_data, int unpacked_len, float* unpacked_data, float mdi, function* parent)
+Throws
+MESSAGE
+INFO
+WARNING
+
+wgdos_decode_field_parameters (char** data, int unpacked_len, float *accuracy, int *ncols, int *nrows, function* parent)
+Throws
+INFO
+ERROR
+
+wgdos_decode_row_parameters(char** data, float* base, Boolean *missing_data_present, Boolean *zeros_bitmap_present, int *bits_per_value, int *nop, function* parent)
+Throws
+INFO
+ERROR
+
+convert_float_ibm_to_ieee32(int ibm[], int ieee[], int* n)
+Throws nothing
+
+convert_float_ieee32_to_ibm(int ieee[], int ibm[], int* n)
+Throws nothing
+
+wgdos_expand_row_to_data(int ncols, float mdi, float accuracy, float base, Boolean* missing_data, Boolean* zero, int* data, float* unpacked_data, int* mdi_clashes, function* parent)
+Throws
+MESSAGE
+
+read_wgdos_bitmaps(char** data, int ncols, Boolean missing_data_present, Boolean zeros_bitmap_present, void* buffer, Boolean* missing_data, Boolean* zero, int* missing_data_count, int* zeros_count)
+Throws nothing
+
+extract_bitmaps(void* packed, int start_bit, int nbits, Boolean one_true, Boolean* unpacked)
+Throws nothing
+
+extract_nbit_words(void* packed, int bits_per_value, int nitems, int* unpacked)
+Throws nothing
+
+extract_wgdos_row(char** packed_data, int ndata, int bits_per_value, void* buffer, int* data)
+Throws nothing
+
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Call graph.
+
+
+        unpack_ppfield---------> get_mdi
+                             |-> get_unpacked_size
+                             |-> runlenDecode
+                             \-> wgdos_unpack-------> wgdos_decode_field_parameters
+                                                  |-> wgdos_decode_row_parameters-----> convert_float_ibm_to_ieee32
+                                                  |-> read_wgdos_bitmaps--------------> extract_bitmaps
+                                                  |-> extract_wgdos_row---------------> extract_nbit_words
+                                                  \-> wgdos_expand_row_to_data
+
+        pack_ppfield----> runlenEncode
+                      \-> wgdos_pack------> count_zeros
+                                        |-> fill_bitmap
+                                        |-> bitstuff
+                                        \> wgdos_calc_row_header---> convert_float_iee32_to_ibm
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Example of setting up your main program to handle using this unpacking library:
+
+#include "wgdosstuff.h"
+#include "rlencode.h"
+.
+.
+.
+void MO_syslog(int value, char* message, const function* const caller) {
+  if (value<VERBOSITY_INFO) {
+    printf("Problem unpacking in routine %s: %s\n", caller->name, message);
+  }
+}
+.
+.
+.
+int main(int argc, char** argv) {
+  .
+  .
+  .
+  function root;
+  set_function_name("My Program", &root, 0);
+  set_verbosity(VERBOSITY_NOTHING);
+  .
+  .
+  .
+  unpack_ppfield(&ppheader, ppdata, unpacked_data, &root);
+  .
+  .
+  .
+  logerror_exit();
+}

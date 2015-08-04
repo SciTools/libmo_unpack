@@ -1,0 +1,149 @@
+#!/bin/sh
+# Copyright (c) 2012, The Met Office, UK
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met: 
+#
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions and the following disclaimer. 
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions and the following disclaimer in the documentation
+#    and/or other materials provided with the distribution. 
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+# ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+# ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+# The views and conclusions contained in the software and documentation are those
+# of the authors and should not be interpreted as representing official policies, 
+# either expressed or implied, of the Met Office.
+#
+
+. /etc/profile
+
+# Edit these values when building a new version of the library
+major=2
+minor=0
+rel=3
+
+os=`uname`
+if [ _$os = "_OS/390" ]
+then
+  CC="cc"
+  AR="ar"
+  OPTS="-DIBM -D_LARGE_FILES"
+elif [ "_$os" == "_Linux" ]
+then
+  CC=gcc
+  LD="ld -shared -soname libmo_unpack.so.$major"
+  AR="ar"
+  OPTS="-O4 -mfpmath=sse -msse -I include -D_LARGEFILE_SOURCE -D_LARGEFILE_SOURCE64 -D_FILE_OFFSET_BITS=64"
+  LDOPTS=""
+  has_shared=1
+elif [ "_$os" == "_AIX" ]
+then
+  . prg_12_1_0_9
+  CC=xlc
+  LD=xlc
+  AR="ar"
+  OPTS="-D_AIX -O4 -I include  -D_LARGEFILE_SOURCE -D_LARGEFILE_SOURCE64 -D_FILE_OFFSET_BITS=64"
+  LDOPTS="-G -qmkshrobj"
+  has_shared=1
+elif [ "_$os" == "_Darwin" ]
+then
+  CC=gcc
+  LD="ld -shared -soname libmo_unpack.so.$major"
+  AR="ar"
+  OPTS="-O4 -I include -D_LARGEFILE_SOURCE -D_LARGEFILE_SOURCE64 -D_FILE_OFFSET_BITS=64 -D_DARWIN_SOURCE"
+  has_shared=1
+else
+  echo Cannot compile on $os
+  exit 1
+fi
+
+rm lib/* 2>&1
+
+if [ "_$has_shared" != "_" ]
+then
+  $CC -c -fPIC $OPTS  logerrors.c \
+    read_wgdos_bitmaps.ibm.c \
+    rlencode.c \
+    wgdos_decode_field_parameters.c \
+    wgdos_decode_row_parameters.c \
+    wgdos_expand_row_to_data.c \
+    wgdos_unpack.c \
+    extract_bitmaps.c \
+    extract_wgdos_row.c \
+    extract_nbit_words.c \
+    convert_float_ibm_to_ieee32.c \
+    convert_float_ieee32_to_ibm.c \
+    unpack_ppfield.c \
+    wgdos_pack.c \
+    pack_ppfield.c
+
+  $LD $LDOPTS -o lib/libmo_unpack.so.$major.$minor.$rel \
+    logerrors.o \
+    read_wgdos_bitmaps.ibm.o \
+    rlencode.o \
+    wgdos_decode_field_parameters.o \
+    wgdos_decode_row_parameters.o \
+    wgdos_expand_row_to_data.o \
+    wgdos_unpack.o \
+    extract_bitmaps.o \
+    extract_wgdos_row.o \
+    extract_nbit_words.o \
+    convert_float_ibm_to_ieee32.o \
+    convert_float_ieee32_to_ibm.o \
+    unpack_ppfield.o \
+    wgdos_pack.o \
+    pack_ppfield.o
+
+  cd lib
+  ln -s libmo_unpack.so.$major.$minor.$rel libmo_unpack.so.$major.$minor && \
+    ln -s libmo_unpack.so.$major.$minor libmo_unpack.so.$major && \
+    ln -s libmo_unpack.so.$major libmo_unpack.so
+  cd ..
+fi
+
+$CC -c -static $OPTS  logerrors.c \
+  read_wgdos_bitmaps.ibm.c \
+  rlencode.c \
+  uascii.c \
+  wgdos_decode_field_parameters.c \
+  wgdos_decode_row_parameters.c \
+  wgdos_expand_row_to_data.c \
+  wgdos_unpack.c \
+  extract_bitmaps.c \
+  extract_wgdos_row.c \
+  extract_nbit_words.c \
+  convert_float_ibm_to_ieee32.c \
+  convert_float_ieee32_to_ibm.c \
+  unpack_ppfield.c \
+  wgdos_pack.c \
+  pack_ppfield.c
+
+$AR -cr lib/libmo_unpack.a \
+  logerrors.o \
+  read_wgdos_bitmaps.ibm.o \
+  rlencode.o \
+  uascii.o \
+  wgdos_decode_field_parameters.o \
+  wgdos_decode_row_parameters.o \
+  wgdos_expand_row_to_data.o \
+  wgdos_unpack.o \
+  extract_bitmaps.o \
+  extract_wgdos_row.o \
+  extract_nbit_words.o \
+  convert_float_ibm_to_ieee32.o \
+  convert_float_ieee32_to_ibm.o \
+  unpack_ppfield.o \
+  wgdos_pack.o \
+  pack_ppfield.o
