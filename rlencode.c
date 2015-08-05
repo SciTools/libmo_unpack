@@ -37,12 +37,14 @@ char message[MAX_MESSAGE_SIZE];
 #define debug 0
 /*
  * runlenEncode returns RL_OK if success, RL_ERR if input the number of
- * points encoded is not equal to input full length. "thinlen" contains
- * the size of the encoded field on return. Missing data values represented
+ * points encoded is not equal to input full length. On entry,"thinlen" must
+ * be set to the size of the thinvec buffer. On exit, "thinlen" contains
+ * the size of the encoded field. Missing data values represented
  * by "bmdi" are mapped into a single missing data value followed
  * by an integer value indicating the length of the run of missing data
  * values. fatvec and thinvec are the expanded (input) and compressed (output)
  * fields respectively.
+ *
  */
 int runlen_encode (float *fatvec, int fatlen, float *thinvec, int *thinlen, float bmdi, function* parent)
 {
@@ -50,6 +52,7 @@ int runlen_encode (float *fatvec, int fatlen, float *thinvec, int *thinlen, floa
   int nmdi = 0;       /* length of current run of mdi */
   int tmdi = 0;       /* Count of total number of mdi */
   int other = 0;       /* Count of total number of non mdi */
+  int maxthinlen = *thinlen;
   float *vp = thinvec; /* pointer used to set encoded field */ 
   function subroutine;
   int log_messages=(get_verbosity()>=VERBOSITY_MESSAGE);
@@ -60,6 +63,11 @@ int runlen_encode (float *fatvec, int fatlen, float *thinvec, int *thinlen, floa
     if (*fatvec == bmdi) {
       nmdi++, tmdi++;
     } else {
+      // Check whether we have enough room in thinvec for what we're
+      // about to store.
+      if (*thinlen + 1 + 2 * (nmdi > 0) > maxthinlen) {
+        return RL_ERR;
+      }
       if (nmdi > 0) {
         if ((tmdi + other) <= fatlen) {
           if (log_messages) {
