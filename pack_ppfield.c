@@ -63,6 +63,7 @@ int pack_ppfield(float mdi, int ncols, int nrows, float* data, int pack, int bpa
   int count;
   int retcode=0;
   int unpacked_size=nrows*ncols;
+  int pack_rcode=0; /* return code from the wgdos_pack function */
   function subroutine;
   set_function_name(__func__, &subroutine, parent);
 
@@ -84,10 +85,15 @@ int pack_ppfield(float mdi, int ncols, int nrows, float* data, int pack, int bpa
   case WGDOS_PACKED:
     /* WGDOS packing packs as a bytestream, MSB first */
     MO_syslog(VERBOSITY_INFO, "WGDOS packing data", &subroutine);
-    if (wgdos_pack(ncols, nrows, data, mdi, bpacc, packed, packed_size, parent)) {
+    pack_rcode = wgdos_pack(ncols, nrows, data, mdi, bpacc, packed, packed_size, parent);
+    if (pack_rcode != 0) {
       /* Couldn't pack, so remember this when exiting */
       MO_syslog(VERBOSITY_INFO, "wgdos_pack Failed", &subroutine);
-      retcode=1;
+      if (pack_rcode == INVALID_PACKING_ACCURACY) {
+	retcode=INVALID_PACKING_ACCURACY;
+      } else {
+	retcode=1;
+      }
     }
     break;
   case RLE_PACKED:

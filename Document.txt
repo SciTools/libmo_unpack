@@ -444,8 +444,16 @@ int main(int argc, char** argv) {
   set_verbosity(VERBOSITY_NOTHING);
   .
   .
+  /* Read PP HEADER */
+  /* CONVERT PPHEADER to native format numbers */
+  mdi=ppheader[BRMDI_INDEX];
+  data_size=ppheader[LBLREC_INDEX]-ppheader[LBEXT_INDEX];
+  pack=ppheader[LBPACK_INDEX]
+  expected_size=ppheader[LBROW_INDEX]*ppheader[LBNPT_INDEX];
+  /* Read field data */
   .
-  unpack_ppfield(&ppheader, ppdata, unpacked_data, &root);
+  .
+  unpack_ppfield(mdi, data_size, packed_data, pack, expected_size, unpacked_data, &root);
   .
   .
   .

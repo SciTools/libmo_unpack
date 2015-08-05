@@ -44,6 +44,8 @@
 
   #define MAX_MESSAGE_SIZE 1024
 
+  #define INVALID_PACKING_ACCURACY 31
+
   #include "logerrors.h"
 
   #ifndef TRUE
