@@ -138,10 +138,11 @@ int wgdos_decode_field_parameters (
     printf("size inconsistent %d * %d != %d\n", *nrows, *ncols, unpacked_len);
     status = -1;
   }
-    
+  #ifdef DEBUG  
   snprintf(message, MAX_MESSAGE_SIZE, "WGDOS_decode_field_parameters returned total length %d, precision %d, row length %d and rows %d",
       field_header.total_length, field_header.precision, field_header.pts_in_row, field_header.rows_in_field);
   MO_syslog(VERBOSITY_MESSAGE, message, &subroutine);
+  #endif
 
   return status;
 }

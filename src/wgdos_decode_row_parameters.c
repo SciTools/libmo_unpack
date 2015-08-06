@@ -114,7 +114,9 @@ int wgdos_decode_row_parameters(
     /* And change the IBM float to an IEEE float: uses the float version of basetemp */
     status=convert_float_ibm_to_ieee32(&basetemp.i, (int*)base, &baselen);
     if (status <0) {
+      #ifdef DEBUG
       MO_syslog(VERBOSITY_ERROR, "IEEE/IBM float conversion failed", &subroutine);
+      #endif
     }
     
     *data = *data + 4;        
@@ -130,9 +132,11 @@ int wgdos_decode_row_parameters(
     *bits_per_value        =   int2_pair[0] &  31; /* Lowest 5 bits: bits per value (<32) */
 
     *data = *data + 4;
-    
+
+    #ifdef DEBUG 
     snprintf(message, MAX_MESSAGE_SIZE, "Decoded BitFlags Zero:%d, MDI: %d. %d bits per value base value %f, %d words taken",
       *zeros_bitmap_present, *missing_data_present, *bits_per_value, *base, *nop);
     MO_syslog(VERBOSITY_MESSAGE, message, &subroutine);
+    #endif
     return status;
 } /* end function PP_Wgdos_Start_Row */

@@ -137,8 +137,10 @@ int wgdos_unpack(
     
     set_function_name(__func__, &subroutine, parent);
 
+    #ifdef DEBUG
     snprintf(message, MAX_MESSAGE_SIZE, "MDI given as %f from %s", mdi, parent->name);
     MO_syslog(VERBOSITY_MESSAGE, message, &subroutine);
+    #endif
     /* Read field header information */
     status=wgdos_decode_field_parameters(&packed_data, unpacked_len, &accuracy, &ncols, &nrows, &subroutine);
     packed_data=packed_data+12;
@@ -160,8 +162,10 @@ int wgdos_unpack(
     row = 0;
     next_packed_row=0;
     while ( row < nrows)  {
+      #ifdef DEBUG
       snprintf(message, MAX_MESSAGE_SIZE, "On row %d", row);
       MO_syslog(VERBOSITY_MESSAGE, message, &subroutine);
+      #endif
       start_off=packed_data;
  
       /* Read row header information */
@@ -169,8 +173,10 @@ int wgdos_unpack(
                            &zeros_bitmap_present, &bits_per_value, &nop, &subroutine );
       next_packed_row=nop*4+8; /* bytes = nop*4 (32 bit words) + 8 bytes for the row header*/
       if (status) {
+        #ifdef DEBUG
         snprintf(message, MAX_MESSAGE_SIZE, "Failed to properly decode row %d parameters. Base %f. bpv %d", row, base, bits_per_value);
         MO_syslog(VERBOSITY_ERROR, message, &subroutine);
+        #endif
         set_logerrno(LOGERRNO_FORMAT_EXCEPTION);
         status=-1;
         break;
@@ -190,9 +196,11 @@ int wgdos_unpack(
       /* Unpack the data in the data buffer */
       status=wgdos_expand_row_to_data(ncols, mdi,  accuracy, base,
                             missing_data, zero, data,
-                            unpacked_row, &row_mdi_clashes, &subroutine); 
+                            unpacked_row, &row_mdi_clashes, &subroutine);
+      #ifdef DEBUG
       snprintf (message, MAX_MESSAGE_SIZE, "Row %d: Base %g, %d bits per value, accuracy %g", row, base, bits_per_value, accuracy);
       MO_syslog(VERBOSITY_MESSAGE, message, &subroutine);
+      #endif
       mdi_clashes += row_mdi_clashes;
       offset=row*ncols;
       /* Copy row across from unpacked_row to the right offset in the unpacked_data*/
@@ -200,9 +208,11 @@ int wgdos_unpack(
 
       /* Check that the number of data values read is correct wrt the WGDOS header */
       if (packed_data-start_off != next_packed_row) {
+        #ifdef DEBUG
         snprintf (message, MAX_MESSAGE_SIZE, "WGDOS row (%d) length (%d) doesn't agree with disk length (%d) for %d values", \
                  row, next_packed_row, packed_data-start_off, ndata);
         MO_syslog(VERBOSITY_ERROR, message, &subroutine);
+        #endif
         set_logerrno(LOGERRNO_FORMAT_EXCEPTION);
         status=-1;
         break;
