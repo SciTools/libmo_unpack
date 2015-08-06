@@ -1,4 +1,4 @@
-AC_INIT([mo_unpack], [2.1], [rhattersley@gmail.com])
+AC_INIT([mo_unpack], [3.0], [rhattersley@gmail.com])
 AM_INIT_AUTOMAKE([foreign -Wall -Werror])
 AM_PROG_AR
 LT_INIT
