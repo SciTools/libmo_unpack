@@ -10,6 +10,7 @@ Makefile.in
 
 aclocal.m4
 ar-lib
+autom4te.cache
 compile
 config.*
 configure
@@ -20,6 +21,7 @@ ltmain.sh
 m4
 missing
 stamp-h1
+test-driver
 
 *.la
 *.lo
