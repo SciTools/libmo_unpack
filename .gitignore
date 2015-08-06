@@ -1,0 +1,26 @@
+# Editors
+*.swp
+
+# Autotools/build artifacts
+.deps
+.libs
+
+Makefile
+Makefile.in
+
+aclocal.m4
+ar-lib
+compile
+config.*
+configure
+depcomp
+install-sh
+libtool
+ltmain.sh
+m4
+missing
+stamp-h1
+
+*.la
+*.lo
+*.o
