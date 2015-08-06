@@ -1,21 +1,3 @@
-+++++++++++++++++++++
-Building the Library.
-+++++++++++++++++++++
-
-The shell script "make_library" will build the library on platforms we know
-about and have supported before. Running this script will build a shared library
-and static library that can be used to unpack PP-style data. These libraries
-will be created in the current directory, suitable only for personal use.
-
-To distribute these libraries to a location for use system-wide use, use the
-"distribute.sh" shell script and run as administrator for that system, giving
-the location where these libraries and development files should go. I.e.
-
-$ distribute.sh /usr/local
-
-which will put the libraries in /usr/local/lib and include files in
-/usr/local/include.
-
 ++++++++++++
 Library use.
 ++++++++++++

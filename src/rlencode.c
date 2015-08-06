@@ -71,7 +71,7 @@ int runlen_encode (float *fatvec, int fatlen, float *thinvec, int *thinlen, floa
       if (nmdi > 0) {
         if ((tmdi + other) <= fatlen) {
           if (log_messages) {
-            snprintf(message, MAX_MESSAGE_SIZE, "adding %d mdi values", nmdi, bmdi);
+            snprintf(message, MAX_MESSAGE_SIZE, "adding %d mdi values", nmdi);
             MO_syslog(VERBOSITY_MESSAGE, message, &subroutine);
           }
           *vp++ = bmdi;
