@@ -48,7 +48,7 @@
 #include "rlencode.h"
 
 // Message buffer for the syslog interface
-char message[MAX_MESSAGE_SIZE];
+static char message[MAX_MESSAGE_SIZE];
 
 // DATA field structure interface
 // pack the data, calling the correct method based on the lookup associated with it

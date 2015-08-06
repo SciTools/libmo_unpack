@@ -51,7 +51,7 @@
 
 // Message buffer for the syslog interface
 #define MAX_MESSAGE_SIZE 1024
-char message[MAX_MESSAGE_SIZE];
+static char message[MAX_MESSAGE_SIZE];
 
 // DATA field structure interface
 // unpack the data, calling the correct method based on the lookup associated with it

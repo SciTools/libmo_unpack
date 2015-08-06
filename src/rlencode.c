@@ -33,7 +33,7 @@
 #include "wgdosstuff.h"
 #include "logerrors.h"
 
-char message[MAX_MESSAGE_SIZE];
+static char message[MAX_MESSAGE_SIZE];
 #define debug 0
 /*
  * runlenEncode returns RL_OK if success, RL_ERR if input the number of
