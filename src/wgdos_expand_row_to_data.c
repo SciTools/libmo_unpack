@@ -117,10 +117,14 @@ int wgdos_expand_row_to_data(
       off=1;
       if ( missing_data[col] ) {
         unpacked_data[col] = mdi;
+        #ifdef DEBUG
         snprintf (message+strlen(message), MAX_MESSAGE_SIZE-strlen(message), " %012g / %-12s", unpacked_data[col],"MDI");
+        #endif
       } else if ( zero[col] ) {
         unpacked_data[col] = 0.0;
+        #ifdef DEBUG
         snprintf (message+strlen(message), MAX_MESSAGE_SIZE-strlen(message), " %012g / %-12s", unpacked_data[col],"Zero");
+        #endif
       } else {
         dval=dacc*data[non_special_so_far]+dbase;
         unpacked_data[col] = dval;
@@ -129,19 +133,25 @@ int wgdos_expand_row_to_data(
         } 
         non_special_so_far++;
         off=1;
+        #ifdef DEBUG
         snprintf (message+strlen(message), MAX_MESSAGE_SIZE-strlen(message), " %012g / %-12d", unpacked_data[col],data[non_special_so_far-off]);
+        #endif
       }
+      #ifdef DEBUG
       if (log_messages &&(col%4 == 3)) {
         snprintf(message+strlen(message), MAX_MESSAGE_SIZE-strlen(message), "%3d", col);
         MO_syslog (VERBOSITY_MESSAGE, message, &subroutine);
         message[0]=0;
       }
+      #endif
     }
+    #ifdef DEBUG
     if (message[0]!=0 && log_messages) {
       snprintf(message+strlen(message), MAX_MESSAGE_SIZE-strlen(message), "%3d", col);
       MO_syslog (VERBOSITY_MESSAGE, message, &subroutine);
       message[0]=0;
     }
+    #endif
     return 0;
 } /* end function PP_Wgdos_Expand_Row */
 
@@ -190,6 +200,7 @@ int wgdos_expand_broken_row_to_data(
           off=1;
         }
       }
+      #ifdef DEBUG
       if (log_messages && (col%3 == 0)) {
         snprintf(message+strlen(message), MAX_MESSAGE_SIZE-strlen(message), "%3d", col);
         MO_syslog (VERBOSITY_MESSAGE, message, &subroutine);
@@ -198,11 +209,14 @@ int wgdos_expand_broken_row_to_data(
       if (log_messages) {
         snprintf (message+strlen(message), MAX_MESSAGE_SIZE-strlen(message), " %.16g/%05d", unpacked_data[col],data[non_special_so_far-off]);
       }
+      #endif
     }
+    #ifdef DEBUG
     if (log_messages && message[0]!=0) {
       snprintf(message+strlen(message), MAX_MESSAGE_SIZE-strlen(message), "%3d", col);
       MO_syslog (VERBOSITY_MESSAGE, message, &subroutine);
       message[0]=0;
     }
+    #endif
     return 0;
 } /* end function PP_Wgdos_Expand_Broken_Row */
