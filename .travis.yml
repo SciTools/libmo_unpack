@@ -1,0 +1,13 @@
+language: c
+sudo: false
+addons:
+    apt:
+        packages:
+            - check
+script:
+    # Not sure why this is needed ... works OK locally.
+    - mkdir m4
+    - autoreconf --install
+    - ./configure
+    - make
+    - make check
