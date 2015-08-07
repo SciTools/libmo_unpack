@@ -82,7 +82,7 @@
 #include "logerrors.h"
 
 #define MAX_MESSAGE_SIZE 1024
-char message[MAX_MESSAGE_SIZE];
+static char message[MAX_MESSAGE_SIZE];
 
 /* End of header */
 

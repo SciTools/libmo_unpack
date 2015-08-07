@@ -61,7 +61,7 @@
 #include "wgdosstuff.h"
 #include "logerrors.h"
 
-char message[MAX_MESSAGE_SIZE];
+static char message[MAX_MESSAGE_SIZE];
 /* End of header */
 
 
