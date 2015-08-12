@@ -1,4 +1,4 @@
-Contributing to Conda Manifest
+Contributing to Lib MOUnpack
 
 In proposing contributions to this project, you are agreeing to the following contribution terms.
 
