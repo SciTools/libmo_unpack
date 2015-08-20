@@ -4,10 +4,10 @@ addons:
     apt:
         packages:
             - check
-script:
-    # Not sure why this is needed ... works OK locally.
-    - mkdir m4
-    - autoreconf --install
-    - ./configure
+install:
+    - mkdir build
+    - cd build
+    - cmake ..
     - make
-    - make check
+script:
+    - ctest
