@@ -2,12 +2,18 @@
 
 The first time you build from a clone of this repo you will need to execute:
 ```
-$ autoreconf --install
+$ mkdir build
+$ cd build
+$ cmake ..
 ```
 
-The build process itself is then the usual:
+The build process itself on Linux is then the usual:
 ```
-$ ./configure
 $ make
 $ make install
+```
+
+To run the tests:
+```
+$ make test
 ```
