@@ -5,5 +5,5 @@ add_library(mo_unpack SHARED convert_float_ibm_to_ieee32.c convert_float_ieee32_
 set_target_properties(mo_unpack PROPERTIES SOVERSION 3)
 
 install(TARGETS mo_unpack DESTINATION lib)
-install(FILES wgdosstuff.h DESTINATION include)
+install(FILES wgdosstuff.h logerrors.h rlencode.h DESTINATION include)
 
