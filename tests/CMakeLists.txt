@@ -1,5 +1,6 @@
 enable_testing()
 find_package(Check REQUIRED)
+include_directories(${CMAKE_INCLUDE_PATH})
 include_directories(${CHECK_INCLUDE_DIRS})
 set(LIBS ${LIBS} ${CHECK_LIBRARIES} mo_unpack m rt pthread)
 include_directories(. ../src)
